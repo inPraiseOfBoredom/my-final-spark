@@ -88,7 +88,7 @@ export default Vue.extend({
     async deleteIt() {
       const id = this.$route.params.id;
       const response = await axios.delete(
-        `${process.env.VUE_APP_API_URL}/notes` + id,
+        `${process.env.VUE_APP_API_URL}/notes/` + id,
         {
           headers: {
             authorization: this.$store.state.token,
