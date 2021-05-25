@@ -1,57 +1,54 @@
 <template>
   <div class="p-4 pt-8  max-w-screen-sm max-h-screen">
     <Navigation />
-   
+
     <form @submit.prevent="submit" class="max-w-screen-sm mx-auto mt-16">
       <div class="mb-4">
+        <div id="pictureHere" class="mb-4">
+          <img class="" :src="source" />
+        </div>
+        <button
+          class="text-gray-600 mb-6 border-2 p-2 border-gray-600 hover:bg-yellow-200  hover:bg-opacity-75 appearance-none focus:outline-none "
+          @click="addImage"
+        >
+          Choose your photo of the day
+        </button>
 
-          <div id="pictureHere"
-   class="mb-4"> 
-   <img class="" :src="imageSrc"  />
-   </div>
-   <button class="text-gray-600 mb-6 border-2 p-2 border-gray-600 hover:bg-yellow-200  hover:bg-opacity-75 appearance-none focus:outline-none "
-        @click="addImage"
-        >Choose your photo of the day </button>
-   
-      <div>
-        <label for="title" class="sr-only">Title</label>
+        <div>
+          <label for="title" class="sr-only">Title</label>
 
-        <input
-          class="w-full text-xl font-medium focus:outline-none bg-transparent border-b  border-blue-200 "
-          type="text"
-          name="title"
-          placeholder="Title"
-          v-model="title"
-          @blur="titleTouched = true"
-        />
-        <p class="text-sm text-red-400" v-if="titleHint">
-          {{ titleHint }}
-        </p>
-      </div>
-      <div>
-        <label for="content" class="sr-only">Content</label>
-        <textarea
-          class="bg-transparent resize-none text-lg focus:outline-none 
+          <input
+            class="w-full text-xl font-medium focus:outline-none bg-transparent border-b  border-blue-200 "
+            type="text"
+            name="title"
+            placeholder="Title"
+            v-model="title"
+            @blur="titleTouched = true"
+          />
+          <p class="text-sm text-red-400" v-if="titleHint">
+            {{ titleHint }}
+          </p>
+        </div>
+        <div>
+          <label for="content" class="sr-only">Content</label>
+          <textarea
+            class="bg-transparent resize-none text-lg focus:outline-none 
           "
-          placeholder="Content"
-       
-          v-model="content"
-        />
-      </div>
-      
-     
-     
-        
+            placeholder="Content"
+            v-model="content"
+          />
+        </div>
       </div>
 
-      <select v-model="selectedCollection" class="bg-yellow-50 focus:outline-none">
-         <option value="Job">Job</option>
-         <option value="Todo">Todo</option>
-           <option value="Tracker">Tracker</option>
-         <option value="Personal">Personal</option> </select>
-          
-           <Tracker v-if="selectedCollection === 'Tracker'" />
+      <select
+        v-model="selectedCollection"
+        class="bg-yellow-50 focus:outline-none"
+      >
+        <option value="Job">Job</option>
+        <option value="Todo">Todo</option>
 
+        <option value="Personal">Personal</option>
+      </select>
 
       <div class="mt-4">
         <button
@@ -64,24 +61,18 @@
       <p v-if="submitError" class="mt-1 text-xs text-red-600">
         {{ submitError }}
       </p>
-
-      
-     
     </form>
-  </div> 
+  </div>
 </template>
 
 <script>
-
 import axios from "axios";
-import Navigation from '@/components/Navigation.vue';
-import Tracker from '@/components/Tracker.vue';
-
+import Navigation from "@/components/Navigation.vue";
 
 export default {
   components: {
-  Navigation,
-  Tracker },
+    Navigation,
+  },
 
   data() {
     return {
@@ -90,10 +81,10 @@ export default {
       content: "",
       submitError: "",
       selectedCollection: "Personal",
-      imageSrc: ""
-      
-  }},
-   
+      source: "",
+    };
+  },
+
   computed: {
     titleHint() {
       if (this.titleTouched == false) return "";
@@ -112,37 +103,36 @@ export default {
     },
 
     async addImage() {
-
-    const res = await axios.get("https://api.unsplash.com/photos/random", {
-    headers: {
-      'Authorization': 'Client-ID zqwYLE9TnTNR-G8tzu7dwxXBnPVvCjqrOHjCOxQBv0Q'}
-    });
-    
-    
-     this.imageSrc = `${res.data.urls.small}`;
-     
-
+      const res = await axios.get("https://api.unsplash.com/photos/random", {
+        headers: {
+          Authorization:
+            "Client-ID zqwYLE9TnTNR-G8tzu7dwxXBnPVvCjqrOHjCOxQBv0Q",
+        },
+      });
+      this.source = `${res.data.urls.small}`;
     },
 
-   
     async submit() {
-        
       this.clearErrors();
       if (!this.validate()) return;
       try {
-        console.log(this.imageSrc);
-        const now = new Date();
-        const response = await axios.post("http://localhost:3000/notes", {
-          title: this.title,
-          content: this.content,
-          collection: this.selectedCollection,
-          createdAt: now,
-          updatedAt: now,
-          createdBy: this.$store.state.user.id,
-          imageSrc: this.imageSrc
-          
-        });
-        
+        console.log(this.source);
+
+        const response = await axios.post(
+          `${process.env.VUE_APP_API_URL}/notes`,
+          {
+            title: this.title,
+            content: this.content,
+            collection: this.selectedCollection,
+            source: this.source,
+          },
+          {
+            headers: {
+              authorization: this.$store.state.token,
+            },
+          }
+        );
+
         const id = response.data.id;
         this.$router.push("/notes/" + id);
       } catch (error) {

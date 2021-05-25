@@ -1,8 +1,8 @@
 <template>
   <div class="p-4 pt-6">
     <form @submit.prevent="submit" class="max-w-screen-sm mx-auto">
-      <div class="mb-4">
-        
+      <Navigation class="mb-8" />
+      <div class="mt-16">
         <label for="title" class="sr-only ">Title</label>
         <input
           class="w-full text-xl font-medium focus:outline-none bg-transparent text-blue-900"
@@ -42,9 +42,13 @@
 
 <script>
 import axios from "axios";
+import Navigation from "@/components/Navigation.vue";
 
 export default {
-    name: "EditNote",
+  name: "EditNote",
+  components: {
+    Navigation,
+  },
   data() {
     return {
       title: "",
@@ -55,7 +59,14 @@ export default {
   },
   async mounted() {
     const id = this.$route.params.id;
-    const response = await axios.get("http://localhost:3000/notes/" + id);
+    const response = await axios.get(
+      `${process.env.VUE_APP_API_URL}/notes/` + id,
+      {
+        headers: {
+          authorization: this.$store.state.token,
+        },
+      }
+    );
     this.title = response.data.title;
     this.content = response.data.content;
   },
@@ -81,16 +92,24 @@ export default {
       if (!this.validate()) return;
       try {
         const now = new Date();
-        
-        const response = await axios.patch("http://localhost:3000/notes/" + this.$route.params.id, {
-          title: this.title,
-          content: this.content,
-          collection: "Personal",
-          updatedAt: now,
-          
-        });
+
+        const response = await axios.patch(
+          `${process.env.VUE_APP_API_URL}/notes/` + this.$route.params.id,
+          {
+            title: this.title,
+            content: this.content,
+            collection: "Personal",
+            updatedAt: now,
+          },
+          {
+            headers: {
+              authorization: this.$store.state.token,
+            },
+          }
+        );
 
         const id = response.data.id;
+
         this.$router.push("/notes/" + id);
       } catch (error) {
         console.error(error);

@@ -34,7 +34,7 @@
     <header class="mb-4 mt-20">
       <h2 class="text-lg  ">{{ note.collection }}</h2>
 
-      <img class="" :src="note.imageSrc" @click="changeIt()" />
+      <img class="" :src="note.source" @click="changeIt()" />
 
       <h1
         class="text-4xl  font-semibold text-blue-900 pb-1 border-b  border-blue-200 "
@@ -81,13 +81,20 @@ export default Vue.extend({
     return {
       note: {},
       showConfirmation: false,
-      imageSrc: "",
+      source: "",
     };
   },
   methods: {
     async deleteIt() {
       const id = this.$route.params.id;
-      const response = await axios.delete("http://localhost:3000/notes/" + id);
+      const response = await axios.delete(
+        `${process.env.VUE_APP_API_URL}/notes` + id,
+        {
+          headers: {
+            authorization: this.$store.state.token,
+          },
+        }
+      );
       console.log(response);
       this.$router.push({ name: "Dashboard" });
     },
@@ -99,19 +106,23 @@ export default Vue.extend({
             "Client-ID zqwYLE9TnTNR-G8tzu7dwxXBnPVvCjqrOHjCOxQBv0Q",
         },
       });
-      this.imageSrc = `${res.data.urls.small}`;
+      this.source = `${res.data.urls.small}`;
     },
     async updateNewImage() {
-      console.log(this.imageSrc);
+      console.log(this.source);
       // eslint-disable-next-line no-unused-vars
       const response = await axios.patch(
         "http://localhost:3000/notes/" + this.$route.params.id,
         {
-          imageSrc: this.imageSrc,
+          source: this.source,
+        },
+        {
+          headers: {
+            authorization: this.$store.state.token,
+          },
         }
       );
-        this.note = response.data;
-
+      this.note = response.data;
     },
 
     async changeIt() {
@@ -120,8 +131,14 @@ export default Vue.extend({
     },
   },
   async mounted() {
-    const id = this.$route.params.id;
-    const response = await axios.get("http://localhost:3000/notes/" + id);
+    const response = await axios.get(
+      `${process.env.VUE_APP_API_URL}/notes/` + this.$route.params.id,
+      {
+        headers: {
+          authorization: this.$store.state.token,
+        },
+      }
+    );
     this.note = response.data;
   },
 });
